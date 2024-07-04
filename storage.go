@@ -5,7 +5,7 @@ import (
 	"os"
 	"fmt"
 	"log"
-	"io/fs"
+	"errors"
 	"bytes"
 	"strings"
 	"crypto/sha1"
@@ -96,34 +96,33 @@ func (s *Store) ReadStream(key string) (io.ReadCloser, error) {
 	pathKeyWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath())
 	return os.Open(pathKeyWithRoot)
 }
-
-func (s *Store) WriteStream(key string, r io.Reader) error {
+func (s *Store) Write(key string, r io.Reader) (int64, error) {
+	return s.WriteStream(key, r)
+}
+func (s *Store) WriteStream(key string, r io.Reader) (int64, error) {
 	pathKey := s.PathTransformFunc(key)
 	pathNameWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.Pathname)
 	if err := os.MkdirAll(pathNameWithRoot, os.ModePerm); err != nil {
-		return err
+		return 0, err
 	}
 	fullPathNameWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath())
 	f, err := os.Create(fullPathNameWithRoot)
     if err != nil {
-		return err
+		return 0, err
 	}
 	n, err := io.Copy(f, r)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	log.Printf("written (%d) bytes to disk: %s", n, fullPathNameWithRoot)
-	return nil
+	return n, nil
 }
 
 func (s *Store) Has(key string) bool {
 	pathKey := s.PathTransformFunc(key)
 	fullPathWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.FullPath())
 	_, err := os.Stat(fullPathWithRoot)
-	if err == fs.ErrNotExist {
-		return false
-	}
-	return true
+	return !errors.Is(err, os.ErrNotExist)
 }
 
 func (s *Store) Delete(key string) error {
@@ -133,4 +132,8 @@ func (s *Store) Delete(key string) error {
 	}()
     firstPathNameWithRoot := fmt.Sprintf("%s/%s", s.Root, pathKey.FirstPathName())
 	return os.RemoveAll(firstPathNameWithRoot)
+}
+
+func (s *Store) Clear() error {
+	return os.RemoveAll(s.Root)
 }
