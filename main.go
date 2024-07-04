@@ -2,7 +2,9 @@ package main
 
 import (
     "log"
+	"fmt"
 	"bytes"
+	//"io/ioutil"
     "time"
 	"github.com/Ridwan-Al-Mahmud/GoDistributedStorage/p2p"
 )
@@ -10,7 +12,7 @@ import (
 func makeServer(listenAddr string, nodes ...string) *FileServer {
 	tcpTransportOpts := p2p.TCPTransportOpts {
 		ListenAddr:    listenAddr,
-		HandshakeFunc: p2p.NOPHandshakeFunc,
+     	HandshakeFunc: p2p.NOPHandshakeFunc,
 		Decoder:       p2p.DefaultDecoder{},
 	}
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
@@ -31,10 +33,25 @@ func main() {
 	go func() {
 		log.Fatal(s1.Start())
 	}()
-	time.Sleep(4 * time.Second)
+	time.Sleep(2 * time.Second)
 	go s2.Start()
-	time.Sleep(4 * time.Second)
-	data := bytes.NewReader([]byte("my big data file here"))
-	s2.StoreData("my_private_data", data)
+	time.Sleep(2 * time.Second)
+	for i := 0; i < 4; i ++ {
+		data := bytes.NewReader([]byte("my big data file here"))
+	    s2.Store(fmt.Sprintf("my_private_data_%d", i), data)
+		time.Sleep(5 * time.Millisecond)
+	}
+	
+
+    /*r, err := s2.Get("my_private_data")
+	//r, err := s2.Get("don't have key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))*/
 	select{}
 }
