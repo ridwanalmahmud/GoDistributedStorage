@@ -3,8 +3,8 @@ package main
 import (
     "log"
 	"fmt"
-	"bytes"
-	//"io/ioutil"
+	//"bytes"
+	"io/ioutil"
     "time"
 	"github.com/Ridwan-Al-Mahmud/GoDistributedStorage/p2p"
 )
@@ -36,14 +36,12 @@ func main() {
 	time.Sleep(2 * time.Second)
 	go s2.Start()
 	time.Sleep(2 * time.Second)
-	for i := 0; i < 4; i ++ {
-		data := bytes.NewReader([]byte("my big data file here"))
-	    s2.Store(fmt.Sprintf("my_private_data_%d", i), data)
-		time.Sleep(5 * time.Millisecond)
-	}
+	/*data := bytes.NewReader([]byte("my big data file here"))
+	s2.Store("my_cool_picture.jpg", data)
+	time.Sleep(5 * time.Millisecond)*/
 	
 
-    /*r, err := s2.Get("my_private_data")
+    r, err := s2.Get("my_cool_picture.jpg")
 	//r, err := s2.Get("don't have key")
 	if err != nil {
 		log.Fatal(err)
@@ -52,6 +50,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(b))*/
-	select{}
+	fmt.Println(string(b))
 }

@@ -27,13 +27,13 @@ func TestStore(t *testing.T) {
 	//key := fmt.Sprintf("foo_%d", i)
 	key := "foo"
 	data := []byte("some jpg files")
-	if err := s.WriteStream(key, bytes.NewReader(data)); err != nil {
+	if _, err := s.WriteStream(key, bytes.NewReader(data)); err != nil {
 		t.Error(err)
 	}
 	if ok := s.Has(key); !ok {
 		t.Errorf("expected to have key %s", key)
 	}
-	r, err := s.Read(key)
+	_, r, err := s.Read(key)
 	if err != nil{
 		t.Error(err)
 	}
