@@ -3,7 +3,7 @@ package main
 import (
     "log"
 	"fmt"
-	//"bytes"
+	"bytes"
 	"io/ioutil"
     "time"
 	"github.com/Ridwan-Al-Mahmud/GoDistributedStorage/p2p"
@@ -17,6 +17,7 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 	}
 	tcpTransport := p2p.NewTCPTransport(tcpTransportOpts)
 	fileServerOpts := FileServerOpts {
+		EncKey:            newEncryptionKey(),
 		StorageRoot:       listenAddr + "_network",
 		PathTransformFunc: CASPathTransformFunc,
 		Transport:         tcpTransport,
@@ -30,19 +31,24 @@ func makeServer(listenAddr string, nodes ...string) *FileServer {
 func main() {
 	s1 := makeServer(":3000", "")
 	s2 := makeServer(":4000", ":3000")
+	s3 := makeServer(":5000", ":3000", ":4000")
 	go func() {
-		log.Fatal(s1.Start())
+		go func(){ log.Fatal(s1.Start()) }()
+		time.Sleep(time.Millisecond * 500)
+		go func(){ log.Fatal(s2.Start()) }()
 	}()
 	time.Sleep(2 * time.Second)
-	go s2.Start()
+	go s3.Start()
 	time.Sleep(2 * time.Second)
-	/*data := bytes.NewReader([]byte("my big data file here"))
-	s2.Store("my_cool_picture.jpg", data)
-	time.Sleep(5 * time.Millisecond)*/
-	
+	key := "my_cool_picture.jpg"
+	data := bytes.NewReader([]byte("my big data file here"))
+	s3.Store(key, data)
 
-    r, err := s2.Get("my_cool_picture.jpg")
-	//r, err := s2.Get("don't have key")
+	if err := s3.store.Delete(key); err != nil {
+		log.Fatal(err)
+	}
+	
+    r, err := s3.Get(key)
 	if err != nil {
 		log.Fatal(err)
 	}
